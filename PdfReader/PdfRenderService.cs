@@ -15,7 +15,7 @@ public sealed class PdfRenderService
     private PdfDocument? _document;
     private string? _currentPath;
 
-    public int PageCount => _document?.TotalPages ?? 0;
+    public int PageCount => _document?.Pages.Count ?? 0;
     public bool HasDocument => _document != null;
 
     public async Task LoadAsync(string filePath)
@@ -29,7 +29,7 @@ public sealed class PdfRenderService
     /// </summary>
     public async Task<BitmapSource?> RenderPageForDisplayAsync(int oneBasedPageIndex)
     {
-        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > _document.TotalPages)
+        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > (_document.Pages.Count))
             return null;
 
         await using var mem = new MemoryStream();
@@ -55,7 +55,7 @@ public sealed class PdfRenderService
         double cropW = 0,
         double cropH = 0)
     {
-        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > _document.TotalPages)
+        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > (_document.Pages.Count))
             return null;
         if (outputWidth <= 0 || outputHeight <= 0) return null;
 
