@@ -14,14 +14,26 @@ public sealed class PdfRenderService
 {
     private PdfDocument? _document;
     private string? _currentPath;
+    private int _pageCount;
 
-    public int PageCount => _document?.Pages.Count ?? 0;
+    public int PageCount => _pageCount;
     public bool HasDocument => _document != null;
 
     public async Task LoadAsync(string filePath)
     {
         _document = await new Melville.Pdf.Model.PdfReader().ReadFromFileAsync(filePath);
         _currentPath = filePath;
+        // Compute and cache page count via PagesTree (async count).
+        if (_document?.PagesTree != null)
+        {
+            // Adjust the awaited member here to match your API,
+            // e.g. Count, CountAsync(), or PageCountAsync().
+            _pageCount = await _document.PagesTree.Count;
+        }
+        else
+        {
+            _pageCount = 0;
+        }
     }
 
     /// <summary>
@@ -29,7 +41,7 @@ public sealed class PdfRenderService
     /// </summary>
     public async Task<BitmapSource?> RenderPageForDisplayAsync(int oneBasedPageIndex)
     {
-        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > (_document.Pages.Count))
+        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > PageCount)
             return null;
 
         await using var mem = new MemoryStream();
@@ -55,7 +67,7 @@ public sealed class PdfRenderService
         double cropW = 0,
         double cropH = 0)
     {
-        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > (_document.Pages.Count))
+        if (_document == null || oneBasedPageIndex < 1 || oneBasedPageIndex > PageCount)
             return null;
         if (outputWidth <= 0 || outputHeight <= 0) return null;
 
